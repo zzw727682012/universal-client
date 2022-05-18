@@ -1,5 +1,14 @@
 package com.create.zzw;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 public class Code1 {
     /**
      * 给你两个整数，n 和 start 。
@@ -37,33 +46,34 @@ public class Code1 {
         return result;
     }
 
-    /**给定三个字符串 s1、s2、s3，请你帮忙验证 s3 是否是由 s1 和 s2 交错 组成的。
+/*
+    给你一个字符串 date ，按 YYYY-MM-DD 格式表示一个 现行公元纪年法 日期。返回该日期是当年的第几天。
+*/
 
-    两个字符串 s 和 t 交错 的定义与过程如下，其中每个字符串都会被分割成若干 非空 子字符串：
+    public static int dateForYear(String dateStr) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-DD");
+        Date date=format.parse(dateStr);
+        int year = date.getYear();
+        int month = date.getMonth();
+        int day = date.getDay();
 
-    s = s1 + s2 + ... + sn
-            t = t1 + t2 + ... + tm
-|n - m| <= 1
-    交错 是 s1 + t1 + s2 + t2 + s3 + t3 + ... 或者 t1 + s1 + t2 + s2 + t3 + s3 + ...
-    注意：a + b 意味着字符串 a 和 b 连接。
-
-             
-
-    示例 1：
-    输入：s1 = "aabcc", s2 = "dbbca", s3 = "aadbbcbcac"
-    输出：true
-    示例 2：
-
-    输入：s1 = "aabcc", s2 = "dbbca", s3 = "aadbbbaccc"
-    输出：false
-    示例 3：
-
-    输入：s1 = "", s2 = "", s3 = ""
-    输出：true
-
-    提示：
-            0 <= s1.length, s2.length <= 100
-            0 <= s3.length <= 200
-    s1、s2、和 s3 都由小写英文字母组成
-    进阶：您能否仅使用 O(s2.length) 额外的内存空间来解决它?。*/
+        if (month == 1) {
+            return day;
+        } else {
+            Integer[] bigMonth = {1, 3, 5, 7, 8, 10, 12};
+            List<Integer> bigMonthList = Arrays.asList(bigMonth);
+            int previousDays = 0;
+            boolean leapYear = year % 400 == 0 || (year % 100 != 0 && year % 4 == 0);
+            for (int i = 1; i <= month - 1; i++) {
+                if (bigMonthList.contains(i)) {
+                    previousDays += 31;
+                } else if (i == 2) {
+                    previousDays += leapYear ? 29 : 28;
+                } else {
+                    previousDays += 30;
+                }
+            }
+            return previousDays + day;
+        }
+    }
 }
