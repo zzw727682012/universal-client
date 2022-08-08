@@ -9,15 +9,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URLDecoder;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Data
 public class HttpRequest {
-    private static Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static Logger logger = LoggerFactory.getLogger(HttpRequest.class);
 
     private static final long serialVersionUID = 1L;
     private String version;
@@ -63,7 +61,7 @@ public class HttpRequest {
                 try {
                     field.set(request, maps.get(field.getName()));
                 } catch (IllegalAccessException e) {
-                    logger.error("set filed:{} value error",field.getName(), e);
+                    logger.error("set filed:{} value error", field.getName(), e);
                 }
             }
         });
@@ -81,7 +79,7 @@ public class HttpRequest {
     }
 
     public static void main(String[] args) {
-        String URL="/aaa/bbb/ccc/ddd?test=123";
+        String URL = "/aaa/bbb/ccc/ddd?test=123";
         String URLS = URL.indexOf("?") > 0 ? URL.substring(0, URL.indexOf("?")) : URL;
         System.out.println(URLS);
         System.out.println(URL.charAt(0));
@@ -91,40 +89,34 @@ public class HttpRequest {
     private static Map<String, String> parameters(String urls) {
         Map<String, String> maps = new HashMap<String, String>();
         try {
-            if (urls == null) return maps;
-            boolean isurls = false, isstop = true;
-            String parameter = ((isurls = urls.contains("?")) ? urls.substring(urls.indexOf("?") + 1) : (isstop = urls.indexOf("/", 2) > 0) ? urls.substring(urls.indexOf("/", 2) + 1) : urls).replace(" ", "");
+            if (urls == null) {
+                return maps;
+            }
+            boolean containsParam = urls.contains("?");
+            if (!containsParam) {
+                return maps;
+            }
+            String parameter = urls.substring(urls.indexOf("?") + 1);
             parameter = URLDecoder.decode(parameter, "UTF-8");
-            if (!isstop) return maps;
-            String[] paras = parameter.split(isurls ? "&" : "/");
+            String[] paras = parameter.split("&");
             return IntStream.range(0, paras.length).mapToObj(x -> {
                 if (!paras[x].contains("=")) return String.format("%s=%s", x, paras[x]);
                 return paras[x];
             }).filter(x -> x.matches("(.+)=(.+)")).collect(Collectors.toMap(x -> x.split("=")[0], x -> x.split("=")[1]));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("parse parameter error, urls:{}", urls, e);
         }
         return maps;
     }
-    public Map<String, String> GetParms(String... name) {
-        if (parameters == null) return null;
-        final int maxvalue = (int) parameters.keySet().stream().filter(x -> x.matches("\\d+")).count();
-        if (name.length < 2) {
-            final StringJoiner builders = new StringJoiner("/");
-            IntStream.range(0, (int) maxvalue).forEach(x -> builders.add(parameters.get(String.valueOf(x))));
-            return null;//ImmutableMap.of(name[0], builders.toString());
-        }
-        return IntStream.range(0, Math.min(name.length, maxvalue)).boxed().collect(Collectors.toMap(x -> name[x], x -> parameters.get(String.valueOf(x)), (x, y) -> x));
-    }
 
-    public String GetParm(String name) {
+    public String GetParam(String name) {
         if (parameters == null) return null;
         return parameters.get(name);
     }
 
-    public <T> T GetParmToBean(Class<T> beans, String... parms) {
+    public <T> T GetParamToBean(Class<T> beans, String... params) {
         try {
-            Map<String, String> paras = (parms.length > 0) ? GetParms(parms) : parameters;
+            Map<String, String> paras = (params.length > 0) ? GetParams(params) : parameters;
             if (paras == null) return null;
             System.out.println("..................................");
             if (Modifier.isAbstract(beans.getModifiers()) || Modifier.isInterface(beans.getModifiers()) || !Stream.of(beans.getConstructors()).anyMatch(x -> x.getParameterCount() < 1))
@@ -152,5 +144,16 @@ public class HttpRequest {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public Map<String, String> GetParams(String... name) {
+        if (parameters == null) return null;
+        final int maxvalue = (int) parameters.keySet().stream().filter(x -> x.matches("\\d+")).count();
+        if (name.length < 2) {
+            final StringJoiner builders = new StringJoiner("/");
+            IntStream.range(0, (int) maxvalue).forEach(x -> builders.add(parameters.get(String.valueOf(x))));
+            return null;//ImmutableMap.of(name[0], builders.toString());
+        }
+        return IntStream.range(0, Math.min(name.length, maxvalue)).boxed().collect(Collectors.toMap(x -> name[x], x -> parameters.get(String.valueOf(x)), (x, y) -> x));
     }
 }

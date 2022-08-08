@@ -4,17 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.concurrent.*;
 
 public class SimpleHttpServer implements Runnable {
@@ -36,7 +29,7 @@ public class SimpleHttpServer implements Runnable {
             while (true) {
                 Socket socket = serverSocket.accept();
                 socket.setSoTimeout(10);
-                threadPool.execute(new RequestProcessor(socket));
+                threadPool.execute(new SocketProcessor(socket));
 
             }
         } catch (IOException e) {
@@ -45,18 +38,13 @@ public class SimpleHttpServer implements Runnable {
     }
 
 
-    private class RequestProcessor implements Runnable {
+    private class SocketProcessor implements Runnable {
         private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-        private File rootDirectory;
-        private String indexFileName = "index.html";
         private Socket socket;
-        private byte[] content;
-        private byte[] header;
 
-
-        public RequestProcessor(Socket socket) throws UnsupportedEncodingException {
-            logger.info("create Socket {}", socket);
+        public SocketProcessor(Socket socket) throws UnsupportedEncodingException {
+            logger.info("received socket {}", socket.toString());
             this.socket = socket;
         }
 
@@ -71,17 +59,13 @@ public class SimpleHttpServer implements Runnable {
                 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 StringBuilder requestLine = new StringBuilder();
 
-                try {
-                    char[] buf = new char[8192];
-                    while (true) {
-                        int c =reader.read(buf);
-                        if (c==-1) {
-                            break;
-                        }
-                        requestLine.append(buf).append("\r\n");
+                char[] buf = new char[8192];
+                while (true) {
+                    int c = reader.read(buf);
+                    if (c == -1) {
+                        break;
                     }
-                } catch (IOException e) {
-
+                    requestLine.append(buf).append("\r\n");
                 }
 
                 String request = requestLine.toString();
@@ -92,9 +76,6 @@ public class SimpleHttpServer implements Runnable {
                 String version = tokens[2];
                 if (method.equals("GET")) {
                     String fileName = tokens[1];
-                    if (fileName.endsWith("/")) {
-                        fileName += indexFileName;
-                    }
                     String contentType = URLConnection.getFileNameMap().getContentTypeFor(fileName);
                     String response = "ZZWQOQ";
                     sendHeader(out, "HTTP/1.1 200 OK", contentType, response.length());

@@ -1,10 +1,7 @@
-package com.create.zzw;
+package com.code;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +35,7 @@ public class Code1 {
      * 输出：2
      */
 
-    public static int test(int n, int start) {
+    public static int algorithm(int n, int start) {
         int result = 0;
         for (int i = 0; i < n; i++) {
             result = result ^ (start + 2 * i);
@@ -46,13 +43,12 @@ public class Code1 {
         return result;
     }
 
-/*
+/**
     给你一个字符串 date ，按 YYYY-MM-DD 格式表示一个 现行公元纪年法 日期。返回该日期是当年的第几天。
 */
-
     public static int dateForYear(String dateStr) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-DD");
-        Date date=format.parse(dateStr);
+        Date date = format.parse(dateStr);
         int year = date.getYear();
         int month = date.getMonth();
         int day = date.getDay();
@@ -76,4 +72,38 @@ public class Code1 {
             return previousDays + day;
         }
     }
+
+    /**
+     * 将数组最大位放第一最小位放最后
+     *
+     * @param ints
+     * @return
+     */
+    public static int[] swap(int[] ints) {
+        int max = 0;
+        int maxIndex = 0;
+        for (int i = 0; i < ints.length; i++) {
+            int a = ints[i];
+            if (max < a) {
+                max = a;
+                maxIndex = i;
+            }
+        }
+        ints[maxIndex] = ints[0];
+        ints[0] = max;
+
+        int min = max;
+        int minIndex = 0;
+        for (int i = 0; i < ints.length; i++) {
+            int a = ints[i];
+            if (min > a) {
+                min = a;
+                minIndex = i;
+            }
+        }
+        ints[minIndex] = ints[ints.length - 1];
+        ints[ints.length - 1] = min;
+        return ints;
+    }
+
 }
